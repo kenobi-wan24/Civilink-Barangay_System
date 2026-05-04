@@ -92,4 +92,8 @@ Route::prefix('portal')->name('resident.')->middleware(['auth', 'resident'])->gr
         ->name('request.submit');
     Route::get('/my-requests', [ResidentCtrl\PortalController::class, 'myRequests'])
         ->name('my-requests');
+        
+    Route::get('/requests/{documentRequest}/download',
+    [ResidentCtrl\PortalController::class, 'viewDocument'])
+    ->name('request.download');
 });
