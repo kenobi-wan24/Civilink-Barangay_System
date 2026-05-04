@@ -83,7 +83,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 Route::prefix('portal')->name('resident.')->middleware(['auth', 'resident'])->group(function () {
 
     Route::get('/dashboard', function () {
-        return view('resident.dashboard');
+    return redirect()->route('resident.request.form');
     })->name('dashboard');
 
     Route::get('/request',  [ResidentCtrl\PortalController::class, 'requestForm'])
