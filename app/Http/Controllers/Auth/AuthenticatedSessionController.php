@@ -29,12 +29,38 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
 
+        // ── Resident-specific status gate ─────────────────────────────────────
+        // Residents go through admin approval before getting full portal access.
+        if ($user->role === 'resident') {
+
+            if ($user->account_status === 'rejected') {
+                // Block login entirely — show rejection reason.
+                auth()->logout();
+                $reason = $user->rejection_reason
+                    ? 'Reason: ' . $user->rejection_reason . ' '
+                    : '';
+                return redirect()->route('login')
+                    ->withErrors([
+                        'email' => 'Your registration was not approved. ' . $reason .
+                                   'Please visit the barangay hall to appeal.'
+                    ]);
+            }
+
+            if ($user->account_status === 'pending') {
+                // Allow login but land on the pending screen — no portal access.
+                return redirect()->route('resident.pending');
+            }
+        }
+
+        // ── Non-resident deactivation check ───────────────────────────────────
+        // (is_active is still used for manually deactivating staff/admin accounts)
         if (!$user->is_active) {
             auth()->logout();
             return redirect()->route('login')
                 ->withErrors(['email' => 'Your account has been deactivated.']);
         }
 
+        // ── Normal role-based redirect ─────────────────────────────────────────
         return match($user->role) {
             'admin', 'staff', 'captain' => redirect()->route('admin.dashboard'),
             'resident'                  => redirect()->route('resident.dashboard'),
@@ -55,6 +81,4 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
-
-    
 }

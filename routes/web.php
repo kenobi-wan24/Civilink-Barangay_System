@@ -6,7 +6,7 @@ use App\Http\Controllers\Resident as ResidentCtrl;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\Auth\RegisteredResidentController;
 
-// ─── Public website ────────────────────────────────────────
+// Public website 
 Route::get('/',              [PublicController::class, 'home'])->name('home');
 Route::get('/about',         [PublicController::class, 'about'])->name('about');
 Route::get('/officials',     [PublicController::class, 'officials'])->name('officials');
@@ -14,13 +14,26 @@ Route::get('/announcements', [PublicController::class, 'announcements'])->name('
 Route::get('/contact',       [PublicController::class, 'contact'])->name('contact');
 Route::post('/contact',      [PublicController::class, 'storeInquiry'])->name('contact.store');
 
-// ─── Auth ──────────────────────────────────────────────────
+// Auth
 require __DIR__.'/auth.php';
 
 Route::post('/register/resident', [RegisteredResidentController::class, 'store'])
     ->name('register.resident');
 
-// ─── Admin panel ───────────────────────────────────────────
+// Pending screen
+Route::get('/portal/pending', function () {
+    $user = auth()->user();
+
+    // Active residents who somehow navigate here go back to the portal
+    if ($user->account_status === 'active') {
+        return redirect()->route('resident.dashboard');
+    }
+
+    return view('resident.pending');
+})->middleware('auth')->name('resident.pending');
+
+
+// Admin panel 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
 
     // Dashboard
@@ -51,7 +64,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('document-requests/{documentRequest}/preview',
         [Admin\DocumentRequestController::class, 'preview'])
         ->name('document-requests.preview');
-
     Route::get('document-requests/{documentRequest}/inline',
         [Admin\DocumentRequestController::class, 'inline'])
         ->name('document-requests.inline');
@@ -77,13 +89,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         ->name('users.destroy');
     Route::post('/users/{user}/link',  [Admin\UserController::class, 'linkAccount'])
         ->name('users.link');
+
+    // Registration review, approve, reject — NEW
+    Route::get('/users/{user}/review',   [Admin\UserController::class, 'review'])
+        ->name('users.review');
+    Route::post('/users/{user}/approve', [Admin\UserController::class, 'approveRegistration'])
+        ->name('users.approve');
+    Route::post('/users/{user}/reject',  [Admin\UserController::class, 'rejectRegistration'])
+        ->name('users.reject');
 });
 
-// ─── Resident portal ───────────────────────────────────────
+// Resident portal 
 Route::prefix('portal')->name('resident.')->middleware(['auth', 'resident'])->group(function () {
 
     Route::get('/dashboard', function () {
-    return redirect()->route('resident.request.form');
+        return redirect()->route('resident.request.form');
     })->name('dashboard');
 
     Route::get('/request',  [ResidentCtrl\PortalController::class, 'requestForm'])
@@ -92,8 +112,8 @@ Route::prefix('portal')->name('resident.')->middleware(['auth', 'resident'])->gr
         ->name('request.submit');
     Route::get('/my-requests', [ResidentCtrl\PortalController::class, 'myRequests'])
         ->name('my-requests');
-        
+
     Route::get('/requests/{documentRequest}/download',
-    [ResidentCtrl\PortalController::class, 'viewDocument'])
-    ->name('request.download');
+        [ResidentCtrl\PortalController::class, 'viewDocument'])
+        ->name('request.download');
 });

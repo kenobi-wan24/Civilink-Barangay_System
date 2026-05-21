@@ -10,12 +10,38 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'resident_id', 'name', 'email', 'password', 'role', 'is_active',
+        // Original fields
+        'resident_id',
+        'name',
+        'email',
+        'password',
+        'role',
+        'is_active',
+
+        // Account status (pending / active / rejected)
+        'account_status',
+        'rejection_reason',
+
+        // Registration personal info fields
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'birthdate',
+        'reg_gender',
+        'reg_civil_status',
+        'reg_contact',
+        'reg_purok_zone',
+        'reg_address',
+        'valid_id_path',
     ];
 
     protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = ['email_verified_at' => 'datetime'];
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'birthdate'         => 'date',
+    ];
 
     public function resident()
     {
@@ -42,7 +68,7 @@ class User extends Authenticatable
         return $this->hasMany(ActivityLog::class);
     }
 
-    // Role helpers — use these in Blade and controllers
+    // Role helpers
     public function isAdmin(): bool    { return $this->role === 'admin'; }
     public function isStaff(): bool    { return $this->role === 'staff'; }
     public function isCaptain(): bool  { return $this->role === 'captain'; }
@@ -52,4 +78,9 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['admin', 'staff', 'captain']);
     }
+
+    // Account status helpers
+    public function isPending(): bool  { return $this->account_status === 'pending'; }
+    public function isApproved(): bool { return $this->account_status === 'active'; }
+    public function isRejected(): bool { return $this->account_status === 'rejected'; }
 }

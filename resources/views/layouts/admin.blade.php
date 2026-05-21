@@ -360,7 +360,7 @@
                 </div>
             </div>
         </footer>
-
+        @stack('scripts')
     </div>
 </div>
 </body>
