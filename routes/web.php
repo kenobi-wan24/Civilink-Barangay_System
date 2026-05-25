@@ -90,7 +90,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/users/{user}/link',  [Admin\UserController::class, 'linkAccount'])
         ->name('users.link');
 
-    // Registration review, approve, reject — NEW
+    // Registration review, approve, reject
     Route::get('/users/{user}/review',   [Admin\UserController::class, 'review'])
         ->name('users.review');
     Route::post('/users/{user}/approve', [Admin\UserController::class, 'approveRegistration'])
